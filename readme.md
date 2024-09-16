@@ -1,5 +1,9 @@
 # gossip glomers - fly distributed system challenges
 
+## Maelstrom OCaml client
+
+You can find the implementation in `/ocaml/lib/maelstrom`.
+
 ## Go implementation
 
 1. `cd maelstrom`
@@ -13,8 +17,6 @@
 5. challenge 3b broadcast: `./maelstrom test -w broadcast --bin ~/go/bin/maelstrom-broadcast --node-count 5 --time-limit 20 --rate 10`
 
 ## OCaml implementation
-
-Translated the rust [`maelstrom-node`](https://github.com/sitano/maelstrom-rust-node/blob/main/src/protocol.rs#L41) to ocaml
 
 1. `cd maelstrom`
 2. dune build
@@ -60,3 +62,14 @@ Translated the rust [`maelstrom-node`](https://github.com/sitano/maelstrom-rust-
 ```
 ./maelstrom test -w broadcast --bin ../ocaml/_build/default/bin/03e-efficient-broadcast-faster/main.exe --node-count 25 --time-limit 20 --rate 100 --latency 100
 ```
+
+### 4 grow-only counter
+
+```
+./maelstrom test -w g-counter --bin ../ocaml/_build/default/bin/04-grow-only-counter/main.exe  --node-count 3 --rate 100 --time-limit 20 --nemesis partition
+```
+
+Too tired to debug. I think the general idea is right to track all the states held by each node. Each node is responsible for repeatedly broadcasting its state to all other nodes, and nodes merge the states they receive from other nodes into their own state. The state is a map from node id to the number of increments that node has performed. The merge function is just a map union with the max function as the merge function for duplicate keys. Since we're lazy, each node broadcasts its entire state.
+
+A couple optimizations we can do is to batch outbound broadcasts to sync and send state deltas. To handle deltas though, each node would need to handle out-of-order messages and duplicate updates.
+

@@ -2,6 +2,7 @@ module Protocol = Protocol
 module Message = Message
 module Print = Print
 module Node = Node
+module Crdt = Crdt
 
 module MessageProcessor = struct
   let handle_init message =
@@ -24,17 +25,19 @@ module MessageProcessor = struct
 
   let handle message handler =
     match Message.get_type message with
-    | "init" -> handle_init message
+    | "init" ->
+      handle_init message;
+      handler message
     | _ -> handler message
   ;;
 end
 
-let run handler =
+let run ?(log = false) handler =
   Print.print_stderr "Node running...";
   let rec loop () =
     let line = input_line stdin in
     let message = Yojson.Safe.from_string line in
-    Print.print_stderr ("Received: " ^ line);
+    if log then Print.print_stderr ("Received: " ^ line);
     MessageProcessor.handle message handler;
     loop ()
   in
